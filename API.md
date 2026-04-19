@@ -56,90 +56,99 @@
 
 ---
 
-## 3. ユーザー管理API (Users) ※管理者専用
+## 3. ユーザー管理API (Users)
 
 ### `GET /users`
-- **概要**: ユーザー一覧を取得する。
+- **概要**: ユーザー一覧を取得する（担当者選択用などに全ユーザーが利用可能）。
 
-### `POST /users`
+### `POST /users` (管理者専用)
 - **概要**: ユーザーを新規作成する。
-- **リクエスト**: `user_name`, `email`, `role_code`, `department_name`
-- **処理**:
-  - 初期パスワード（例: `elpa1234`）をハッシュ化して保存する。
-  - `first_login_required` を `true` に設定する。
 
-### `PUT /users/:id`
-- **概要**: ユーザー情報を更新する（有効/無効フラグの切り替えなど）。
+### `PUT /users/:id` (管理者専用)
+- **概要**: ユーザー情報を更新する。
 
-### `POST /users/:id/reset-password`
-- **概要**: 管理者がユーザーのパスワードを初期状態（`elpa1234`）にリセットする。
-- **処理**: リセット後、再度 `first_login_required = true` にする。
+### `DELETE /users/:id` (管理者専用)
+- **概要**: ユーザーを削除する。
+
+### `POST /users/:id/reset-password` (管理者専用)
+- **概要**: パスワードを初期状態にリセットする。
 
 ---
 
 ## 4. 年間目標・月次進捗API (Goals)
 
 ### `GET /goals`
-- **概要**: 年間目標および個人割当の一覧を取得する。年度でフィルタリング可能。
+- **概要**: 年間目標および個人割当の一覧を取得する。
 
 ### `POST /goals`
-- **概要**: 年間目標を新規作成する（管理者のみ）。
+- **概要**: 年間目標を新規作成する（全認証ユーザー可能）。
 
 ### `POST /goals/:id/assignments`
-- **概要**: 年間目標を特定のユーザーに割り当てる（タスク細分化）。
-
-### `GET /monthly-progress`
-- **概要**: 自身または全部員の月次進捗一覧を取得する。対象年月でフィルタリング。
-
-### `POST /monthly-progress`
-- **概要**: 月次進捗を登録・更新する。
-- **リクエスト**: `goal_assignment_id`, `target_year`, `target_month`, `progress_percent`, `progress_comment`, `delay_reason`, `next_month_plan`
-- **バリデーション**:
-  - `target_year` と `target_month` の組み合わせが、同じ `goal_assignment_id` で既に存在する場合は `400 Error`（重複登録禁止）。
-  - `progress_percent` は 0〜100 の数値であること。
+- **概要**: 年間目標を特定のユーザーに割り当てる。
 
 ---
 
-## 5. 日次ルーチン業務API (Daily Tasks)
+## 5. 開発プロジェクトAPI (Developments)
 
-### `GET /daily-tasks`
-- **概要**: 日次業務の一覧を取得する。
-- **パラメータ**: `status`, `assigned_user_id`, `task_type` 等で絞り込み。
+### `GET /developments`
+- **概要**: 開発プロジェクトの一覧を取得する。
 
-### `POST /daily-tasks`
-- **概要**: 日次業務を新規登録する。
-- **リクエスト**: `title`, `task_detail`, `task_type`, `status`, `progress_percent`, `hold_reason` 等。
-- **バリデーション**: 下記「ステータス整合性ルール」を適用。
+### `POST /developments`
+- **概要**: 新規開発プロジェクトを作成する。
 
-### `PUT /daily-tasks/:id`
-- **概要**: 日次業務を更新する。
-- **バリデーション**:
-  - **ステータス整合性ルール（必須）**
-    - `status = '未着手'` の場合、`progress_percent` は必ず `0` であること。
-    - `status = '対応中'` の場合、`progress_percent` は `1`〜`99` であること。
-    - `status = '完了'` の場合、`progress_percent` は必ず `100` であること。
-    - `status = '保留'` の場合、`hold_reason`（保留理由）が空ではないこと。
-- **処理**: 更新前の値と差分がある場合、`daily_task_histories` テーブルに更新履歴を自動記録する。
+### `PUT /developments/:id`
+- **概要**: 開発プロジェクト情報を更新する。
 
-### `GET /daily-tasks/:id/histories`
-- **概要**: 特定の日次業務の更新履歴（タイムライン）を取得する。
+### `DELETE /developments/:id`
+- **概要**: 開発プロジェクトを削除する。
+
+### `GET /developments/:id/tasks`
+- **概要**: プロジェクト配下のタスク一覧を取得する。
+
+### `POST /developments/:id/tasks`
+- **概要**: プロジェクトにタスクを追加する。
+
+### `POST /developments/tasks/:taskId/progress`
+- **概要**: タスクの進捗を更新し、履歴を記録する。
 
 ---
 
-## 6. ダッシュボードAPI (Dashboard)
+## 6. FAQ管理API (FAQs)
 
-### `GET /dashboard/monthly-summary`
-- **概要**: ダッシュボード用の月次進捗サマリーを取得する。
-- **レスポンス**:
-  - 目標ごとの平均進捗率
-  - 遅延フラグが立っている案件数
-  - 未入力の担当者リスト
+### `GET /faqs`
+- **概要**: FAQ（問い合わせ）の一覧を取得する。
 
-### `GET /dashboard/daily-summary`
-- **概要**: ダッシュボード用の日次業務サマリーを取得する。
-- **レスポンス**:
-  - 担当者別の「未着手」「対応中」「完了」「保留」件数
-  - 長期停滞中（例: 3日以上更新がない「対応中」）のタスク一覧
+### `POST /faqs`
+- **概要**: 新規FAQを登録する。
+
+### `PUT /faqs/:id`
+- **概要**: FAQを更新する。
+
+### `DELETE /faqs/:id`
+- **概要**: FAQを削除する。
+
+---
+
+## 7. 日次ルーチン業務API (Routines)
+
+### `GET /routines`
+- **概要**: ユーザーごとのルーチン業務マスタを取得する。
+
+### `POST /routines`
+- **概要**: ルーチン業務を登録する。
+
+### `GET /daily-history`
+- **概要**: 指定した日付のルーチン実施履歴を取得する。
+
+### `POST /daily-history`
+- **概要**: ルーチン業務の実施状況を記録・更新する。
+
+---
+
+## 8. ダッシュボードAPI (Dashboard)
+
+### `GET /dashboard/stats`
+- **概要**: ダッシュボード用の統計情報（タスク数、アラート等）を取得する。
 
 ---
 

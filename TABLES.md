@@ -23,10 +23,72 @@
 7. daily_task_histories
 8. password_reset_logs
 9. notifications
+10. developments (NEW)
+11. development_tasks (NEW)
+12. development_progress (NEW)
+13. faqs (NEW)
 
 ---
 
 ## 3. テーブル定義
+
+(中略: 3.1 〜 3.9)
+
+### 3.10 developments
+開発プロジェクトを管理するテーブル。
+
+| カラム名 | 型 | NULL | キー | 説明 |
+|---|---|---|---|---|
+| id | bigint | NO | PK | プロジェクトID |
+| name | varchar(255) | NO |  | プロジェクト名 |
+| description | text | YES |  | 詳細 |
+| status | varchar(30) | NO |  | 状態 (active, completed) |
+| created_at | datetime | NO |  | 作成日時 |
+| updated_at | datetime | NO |  | 更新日時 |
+
+### 3.11 development_tasks
+開発プロジェクト配下の子タスクを管理するテーブル。
+
+| カラム名 | 型 | NULL | キー | 説明 |
+|---|---|---|---|---|
+| id | bigint | NO | PK | タスクID |
+| development_id | bigint | NO | FK | developments.id |
+| name | varchar(255) | NO |  | タスク名 |
+| description | text | YES |  | 詳細 |
+| assignee_user_id | bigint | YES | FK | users.id |
+| current_progress | int | NO |  | 現在の進捗率 (0-100) |
+| status | varchar(30) | NO |  | 状態 (active, completed) |
+| created_at | datetime | NO |  | 作成日時 |
+| updated_at | datetime | NO |  | 更新日時 |
+
+### 3.12 development_progress
+開発タスクの進捗更新履歴を管理するテーブル。
+
+| カラム名 | 型 | NULL | キー | 説明 |
+|---|---|---|---|---|
+| id | bigint | NO | PK | 履歴ID |
+| task_id | bigint | NO | FK | development_tasks.id |
+| progress_percent | int | NO |  | 更新時の進捗率 |
+| comment | text | YES |  | 進捗コメント |
+| updated_by | bigint | NO | FK | users.id |
+| created_at | datetime | NO |  | 作成日時 |
+
+### 3.13 faqs
+問い合わせ内容を蓄積するFAQテーブル。
+
+| カラム名 | 型 | NULL | キー | 説明 |
+|---|---|---|---|---|
+| id | bigint | NO | PK | FAQ ID |
+| title | varchar(255) | NO |  | 件名 |
+| content | text | YES |  | 内容（回答含む） |
+| assignee_user_id | bigint | YES | FK | 担当者 users.id |
+| status | varchar(30) | NO |  | 状態 (pending, resolved) |
+| progress_percent | int | NO |  | 進捗率 |
+| created_by | bigint | NO | FK | users.id |
+| created_at | datetime | NO |  | 作成日時 |
+| updated_at | datetime | NO |  | 更新日時 |
+
+---
 
 ### 3.1 roles
 役割マスタ。一般部員と管理者を管理する。

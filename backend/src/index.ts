@@ -6,6 +6,9 @@ import usersRoutes from './routes/users';
 import goalsRoutes from './routes/goals';
 import progressRoutes from './routes/progress';
 import routinesRoutes from './routes/routines';
+import developmentsRoutes from './routes/developments';
+import developmentProgressRoutes from './routes/development-progress';
+import faqsRoutes from './routes/faqs';
 import dailyHistoryRoutes from './routes/daily-history';
 import dashboardRoutes from './routes/dashboard';
 
@@ -24,6 +27,9 @@ app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/goals', goalsRoutes);
 app.use('/api/v1/monthly-progress', progressRoutes);
 app.use('/api/v1/daily-tasks', routinesRoutes);
+app.use('/api/v1/developments', developmentsRoutes);
+app.use('/api/v1/development-progress', developmentProgressRoutes);
+app.use('/api/v1/faqs', faqsRoutes);
 app.use('/api/v1/daily-tasks/history', dailyHistoryRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 

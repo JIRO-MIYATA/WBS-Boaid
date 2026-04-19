@@ -7,21 +7,21 @@ const router = Router();
 // 月次進捗一覧取得
 router.get('/', authenticate, async (req: Request, res: Response) => {
     try {
-        const { goal_assignment_id, target_year, target_month } = req.query;
+        const { development_task_id, target_year, target_month } = req.query;
         const db = await getDB();
 
         let query = `
-            SELECT p.*, u.user_name as submitted_user_name, a.assignment_title
-            FROM monthly_goal_progress p
-            JOIN goal_assignments a ON p.goal_assignment_id = a.id
+            SELECT p.*, u.user_name as submitted_user_name, t.title as task_title
+            FROM development_progress p
+            JOIN development_tasks t ON p.development_task_id = t.id
             JOIN users u ON p.submitted_by = u.id
             WHERE 1=1
         `;
         const params: any[] = [];
 
-        if (goal_assignment_id) {
-            query += ' AND p.goal_assignment_id = ?';
-            params.push(goal_assignment_id);
+        if (development_task_id) {
+            query += ' AND p.development_task_id = ?';
+            params.push(development_task_id);
         }
         if (target_year) {
             query += ' AND p.target_year = ?';
@@ -32,9 +32,8 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
             params.push(target_month);
         }
 
-        // 一般ユーザーの場合は自分の関連分のみ（ただし管理者なら全件見れる想定）
         if (req.user?.role_code !== 'admin') {
-            query += ' AND (a.assigned_user_id = ? OR p.submitted_by = ?)';
+            query += ' AND (t.assigned_user_id = ? OR p.submitted_by = ?)';
             params.push(req.user?.id, req.user?.id);
         }
 
@@ -52,7 +51,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 router.post('/', authenticate, async (req: Request, res: Response) => {
     try {
         const { 
-            goal_assignment_id, 
+            development_task_id, 
             target_year, 
             target_month, 
             progress_percent, 
@@ -61,32 +60,29 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
             next_month_plan 
         } = req.body;
 
-        if (!goal_assignment_id || !target_year || !target_month || progress_percent === undefined) {
+        if (!development_task_id || !target_year || !target_month || progress_percent === undefined) {
             return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: '必須項目が不足しています。' } });
         }
 
         const db = await getDB();
 
-        // 割当存在チェックと権限チェック
-        const assignment = await db.get('SELECT assigned_user_id FROM goal_assignments WHERE id = ?', [goal_assignment_id]);
-        if (!assignment) {
-            return res.status(404).json({ error: { code: 'NOT_FOUND', message: '対象の割当タスクが見つかりません。' } });
+        const task = await db.get('SELECT assigned_user_id FROM development_tasks WHERE id = ?', [development_task_id]);
+        if (!task) {
+            return res.status(404).json({ error: { code: 'NOT_FOUND', message: '対象のタスクが見つかりません。' } });
         }
 
-        if (req.user?.role_code !== 'admin' && assignment.assigned_user_id !== req.user?.id) {
+        if (req.user?.role_code !== 'admin' && task.assigned_user_id !== req.user?.id) {
             return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'このタスクの進捗を報告する権限がありません。' } });
         }
 
-        // 重複チェック（既存があれば更新、なければ挿入）
         const existing = await db.get(`
-            SELECT id FROM monthly_goal_progress 
-            WHERE goal_assignment_id = ? AND target_year = ? AND target_month = ?
-        `, [goal_assignment_id, target_year, target_month]);
+            SELECT id FROM development_progress 
+            WHERE development_task_id = ? AND target_year = ? AND target_month = ?
+        `, [development_task_id, target_year, target_month]);
 
         if (existing) {
-            // 更新
             await db.run(`
-                UPDATE monthly_goal_progress
+                UPDATE development_progress
                 SET progress_percent = ?, 
                     progress_comment = ?, 
                     delay_reason = ?, 
@@ -97,17 +93,16 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
                 WHERE id = ?
             `, [progress_percent, progress_comment, delay_reason, next_month_plan, req.user?.id, existing.id]);
             
-            res.json({ message: '月次進捗を更新しました。' });
+            res.json({ message: '進捗を更新しました。' });
         } else {
-            // 新規挿入
             await db.run(`
-                INSERT INTO monthly_goal_progress (
-                    goal_assignment_id, target_year, target_month, progress_percent, 
+                INSERT INTO development_progress (
+                    development_task_id, target_year, target_month, progress_percent, 
                     progress_comment, delay_reason, next_month_plan, submitted_by, submitted_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            `, [goal_assignment_id, target_year, target_month, progress_percent, progress_comment, delay_reason, next_month_plan, req.user?.id]);
+            `, [development_task_id, target_year, target_month, progress_percent, progress_comment, delay_reason, next_month_plan, req.user?.id]);
             
-            res.status(201).json({ message: '月次進捗を登録しました。' });
+            res.status(201).json({ message: '進捗を登録しました。' });
         }
     } catch (err) {
         console.error(err);
@@ -121,19 +116,17 @@ router.delete('/:id', authenticate, async (req: Request, res: Response) => {
         const { id } = req.params;
         const db = await getDB();
 
-        // 対象の進捗データが存在するか、また権限チェック
-        const progress = await db.get('SELECT submitted_by FROM monthly_goal_progress WHERE id = ?', [id]);
+        const progress = await db.get('SELECT submitted_by FROM development_progress WHERE id = ?', [id]);
         
         if (!progress) {
             return res.status(404).json({ error: { code: 'NOT_FOUND', message: '対象の進捗データが見つかりません。' } });
         }
 
-        // 管理者か、または自身が投稿したデータの場合のみ削除可能
         if (req.user?.role_code !== 'admin' && progress.submitted_by !== req.user?.id) {
             return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'この進捗データを削除する権限がありません。' } });
         }
 
-        await db.run('DELETE FROM monthly_goal_progress WHERE id = ?', [id]);
+        await db.run('DELETE FROM development_progress WHERE id = ?', [id]);
         res.json({ message: '進捗データを削除しました。' });
     } catch (err) {
         console.error(err);

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import { CalendarRange, Plus, ChevronRight, Target, X } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 
 interface Goal {
   id: number;
@@ -16,7 +15,6 @@ interface Goal {
 const GoalList: React.FC = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   // 新規目標作成用モーダル
   const [showModal, setShowModal] = useState(false);
@@ -81,15 +79,13 @@ const GoalList: React.FC = () => {
           <h1 className="text-2xl font-bold text-slate-800">年間部門目標</h1>
           <p className="text-sm text-slate-500 font-medium">年度ごとの主要目標一覧</p>
         </div>
-        {user?.role_code === 'admin' && (
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-600/20"
-          >
-            <Plus className="h-4 w-4" />
-            新規目標作成
-          </button>
-        )}
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-600/20"
+        >
+          <Plus className="h-4 w-4" />
+          新規目標作成
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

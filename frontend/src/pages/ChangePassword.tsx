@@ -141,7 +141,7 @@ const ChangePassword: React.FC = () => {
             </div>
           </div>
 
-          <div>
+          <div className="space-y-3">
             <button
               type="submit"
               disabled={isLoading || success}
@@ -156,6 +156,17 @@ const ChangePassword: React.FC = () => {
                 </>
               )}
             </button>
+            
+            {!user.first_login_required && (
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                disabled={isLoading || success}
+                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-slate-200 text-sm font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                キャンセルして戻る
+              </button>
+            )}
           </div>
         </form>
       </div>

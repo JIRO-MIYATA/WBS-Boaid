@@ -17,7 +17,7 @@ import {
 
 interface ProgressHistory {
   id: number;
-  goal_assignment_id: number;
+  development_task_id: number;
   target_year: number;
   target_month: number;
   progress_percent: number;
@@ -31,8 +31,8 @@ interface ProgressHistory {
   updated_at: string;
 }
 
-const MonthlyProgressInput: React.FC = () => {
-  const { goalId, assignmentId } = useParams<{ goalId: string; assignmentId: string }>();
+const DevelopmentProgressInput: React.FC = () => {
+  const { devId, taskId } = useParams<{ devId: string; taskId: string }>();
 
   const [targetYear, setTargetYear] = useState(new Date().getFullYear());
   const [targetMonth, setTargetMonth] = useState(new Date().getMonth() + 1);
@@ -41,7 +41,7 @@ const MonthlyProgressInput: React.FC = () => {
   const [delayReason, setDelayReason] = useState('');
   const [nextMonthPlan, setNextMonthPlan] = useState('');
   
-  const [assignmentTitle, setAssignmentTitle] = useState('');
+  const [taskTitle, setTaskTitle] = useState('');
   const [history, setHistory] = useState<ProgressHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,8 +51,8 @@ const MonthlyProgressInput: React.FC = () => {
 
   const fetchHistory = async () => {
     try {
-      const progressRes = await api.get('/monthly-progress', {
-        params: { goal_assignment_id: assignmentId }
+      const progressRes = await api.get('/development-progress', {
+        params: { development_task_id: taskId }
       });
       setHistory(progressRes.data);
     } catch (err) {
@@ -64,14 +64,11 @@ const MonthlyProgressInput: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // 目標詳細からタイトル等を取得
-        const goalRes = await api.get(`/goals/${goalId}`);
-        const assignment = goalRes.data.assignments.find((a: any) => a.id === Number(assignmentId));
-        if (assignment) {
-          setAssignmentTitle(assignment.assignment_title);
+        const res = await api.get(`/developments/${devId}`);
+        const task = res.data.tasks.find((a: any) => a.id === Number(taskId));
+        if (task) {
+          setTaskTitle(task.title);
         }
-
-        // 履歴全体を取得
         await fetchHistory();
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -80,12 +77,10 @@ const MonthlyProgressInput: React.FC = () => {
       }
     };
     fetchData();
-  }, [goalId, assignmentId]);
+  }, [devId, taskId]);
 
-  // 当月のデータがあれば初期表示時にセットする（任意）
   useEffect(() => {
     if (history.length > 0) {
-      // 選択中の年月に一致するデータがあれば自動反映
       const match = history.find(h => h.target_year === targetYear && h.target_month === targetMonth);
       if (match) {
         setProgressPercent(match.progress_percent);
@@ -93,7 +88,6 @@ const MonthlyProgressInput: React.FC = () => {
         setDelayReason(match.delay_reason || '');
         setNextMonthPlan(match.next_month_plan || '');
       } else {
-        // なければデフォルト値に戻すか維持する
         setProgressPercent(0);
         setProgressComment('');
         setDelayReason('');
@@ -108,8 +102,8 @@ const MonthlyProgressInput: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await api.post('/monthly-progress', {
-        goal_assignment_id: Number(assignmentId),
+      await api.post('/development-progress', {
+        development_task_id: Number(taskId),
         target_year: Number(targetYear),
         target_month: Number(targetMonth),
         progress_percent: Number(progressPercent),
@@ -118,10 +112,8 @@ const MonthlyProgressInput: React.FC = () => {
         next_month_plan: nextMonthPlan
       });
       setSuccess('進捗を保存しました。');
-      await fetchHistory(); // 保存後に履歴を再取得
+      await fetchHistory();
       setTimeout(() => setSuccess(''), 3000);
-      
-      // フォームをスクロール（オプション）
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
       setError(err.response?.data?.error?.message || '進捗の登録に失敗しました。');
@@ -143,7 +135,7 @@ const MonthlyProgressInput: React.FC = () => {
   const handleDelete = async () => {
     if (!deletingId) return;
     try {
-      await api.delete(`/monthly-progress/${deletingId}`);
+      await api.delete(`/development-progress/${deletingId}`);
       setSuccess('進捗履歴を削除しました。');
       setTimeout(() => setSuccess(''), 3000);
       await fetchHistory();
@@ -169,9 +161,9 @@ const MonthlyProgressInput: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
-      <Link to={`/goals/${goalId}`} className="inline-flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold text-sm transition-colors">
+      <Link to={`/developments/${devId}`} className="inline-flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold text-sm transition-colors">
         <ArrowLeft className="h-4 w-4" />
-        目標詳細に戻る
+        開発プロジェクト詳細に戻る
       </Link>
 
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -180,8 +172,8 @@ const MonthlyProgressInput: React.FC = () => {
             <TrendingUp className="h-24 w-24" />
           </div>
           <div className="relative z-10">
-            <h2 className="text-2xl font-black mb-2">{assignmentTitle || 'タスク進捗報告'}</h2>
-            <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">Monthly Progress Report</p>
+            <h2 className="text-2xl font-black mb-2">{taskTitle || '開発タスク進捗報告'}</h2>
+            <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">Development Progress Report</p>
           </div>
         </div>
 
@@ -317,7 +309,6 @@ const MonthlyProgressInput: React.FC = () => {
             {history.map((item) => (
               <div key={item.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
                 
-                {/* 左側: ステータス・日付 */}
                 <div className={`p-6 flex flex-col items-center justify-center shrink-0 w-full md:w-48 ${item.progress_percent === 100 ? 'bg-emerald-50 border-r border-emerald-100' : 'bg-slate-50 border-r border-slate-100'}`}>
                   <span className="text-sm font-bold text-slate-500 mb-1">{item.target_year}年 {item.target_month}月</span>
                   <div className="text-3xl font-black text-indigo-600 mb-2">{item.progress_percent}%</div>
@@ -329,7 +320,6 @@ const MonthlyProgressInput: React.FC = () => {
                   )}
                 </div>
 
-                {/* 右側: コメント類 */}
                 <div className="p-6 flex-1">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -340,7 +330,7 @@ const MonthlyProgressInput: React.FC = () => {
                       <button 
                         onClick={() => handleEdit(item)}
                         className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
-                        title="編集（上部のフォームにセットします）"
+                        title="編集"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -381,7 +371,6 @@ const MonthlyProgressInput: React.FC = () => {
         )}
       </div>
 
-      {/* 削除確認ダイアログ */}
       {deletingId && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center">
@@ -417,4 +406,4 @@ const MonthlyProgressInput: React.FC = () => {
   );
 };
 
-export default MonthlyProgressInput;
+export default DevelopmentProgressInput;

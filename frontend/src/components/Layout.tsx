@@ -8,6 +8,8 @@ import {
   ClipboardList, 
   Users, 
   Settings,
+  Target,
+  MessageCircleQuestion,
   ChevronRight
 } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
@@ -25,6 +27,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navItems = [
     { name: 'ダッシュボード', path: '/', icon: LayoutDashboard },
     { name: '年間目標・月次進捗', path: '/goals', icon: CalendarRange },
+    { name: '開発業務・進捗管理', path: '/developments', icon: Target },
+    { name: '問い合わせ・FAQ', path: '/faqs', icon: MessageCircleQuestion },
     { name: '日次ルーチン業務', path: '/daily-tasks', icon: ClipboardList },
     { name: 'ルーチン設定', path: '/routines', icon: Settings },
   ];
@@ -124,6 +128,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <h2 className="text-xl font-bold text-slate-800">
               {location.pathname === '/' && 'ダッシュボード'}
               {location.pathname.startsWith('/goals') && '年間目標・月次進捗'}
+              {location.pathname.startsWith('/developments') && '開発業務・進捗管理'}
+              {location.pathname.startsWith('/faqs') && '問い合わせ・FAQ管理'}
               {location.pathname === '/daily-tasks' && '日次ルーチン業務'}
               {location.pathname === '/routines' && 'ルーチン設定'}
               {location.pathname === '/users' && 'ユーザー管理'}

@@ -10,6 +10,11 @@ import GoalDetail from './pages/GoalDetail';
 import MonthlyProgressInput from './pages/MonthlyProgressInput';
 import RoutineMaster from './pages/RoutineMaster';
 import DailyExecution from './pages/DailyExecution';
+import UserManagement from './pages/UserManagement';
+import DevelopmentList from './pages/DevelopmentList';
+import DevelopmentDetail from './pages/DevelopmentDetail';
+import DevelopmentProgressInput from './pages/DevelopmentProgressInput';
+import FAQManagement from './pages/FAQManagement';
 
 const App: React.FC = () => {
   return (
@@ -32,11 +37,17 @@ const App: React.FC = () => {
             {/* 日次ルーチンルート */}
             <Route path="/daily-tasks" element={<DailyExecution />} />
             <Route path="/routines" element={<RoutineMaster />} />
+
+            {/* 開発管理・FAQルート */}
+            <Route path="/developments" element={<DevelopmentList />} />
+            <Route path="/developments/:id" element={<DevelopmentDetail />} />
+            <Route path="/developments/:devId/progress/:taskId" element={<DevelopmentProgressInput />} />
+            <Route path="/faqs" element={<FAQManagement />} />
           </Route>
 
           {/* 管理者必須ルート */}
           <Route element={<ProtectedRoute requireAdmin={true} />}>
-            <Route path="/users" element={<Dashboard />} />
+            <Route path="/users" element={<UserManagement />} />
           </Route>
 
 

@@ -7,7 +7,6 @@ import {
   Clock, 
   AlertCircle,
   MessageSquare,
-  Save,
   ArrowLeft,
   ArrowRight
 } from 'lucide-react';

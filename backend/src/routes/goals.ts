@@ -32,8 +32,8 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
     }
 });
 
-// 年間目標新規作成 (管理者専用)
-router.post('/', authenticate, requireAdmin, async (req: Request, res: Response) => {
+// 年間目標新規作成
+router.post('/', authenticate, async (req: Request, res: Response) => {
     try {
         const { fiscal_year, goal_code, goal_title, goal_description, start_date, end_date } = req.body;
 
@@ -93,8 +93,8 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
     }
 });
 
-// 目標への担当者割当 (管理者専用)
-router.post('/:id/assignments', authenticate, requireAdmin, async (req: Request, res: Response) => {
+// 目標への担当者割当
+router.post('/:id/assignments', authenticate, async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const { assigned_user_id, assignment_title, assignment_description, priority, due_date } = req.body;

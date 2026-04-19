@@ -40,9 +40,11 @@
 | カラム名 | 型 | NULL | キー | 説明 |
 |---|---|---|---|---|
 | id | bigint | NO | PK | プロジェクトID |
-| name | varchar(255) | NO |  | プロジェクト名 |
+| development_code | varchar(50) | NO | UK | プロジェクトコード |
+| title | varchar(255) | NO |  | プロジェクト名 |
 | description | text | YES |  | 詳細 |
-| status | varchar(30) | NO |  | 状態 (active, completed) |
+| status | varchar(30) | NO |  | 状態 (active, completed, on_hold) |
+| owner_user_id | bigint | YES | FK | 主管理者 users.id |
 | created_at | datetime | NO |  | 作成日時 |
 | updated_at | datetime | NO |  | 更新日時 |
 
@@ -53,10 +55,11 @@
 |---|---|---|---|---|
 | id | bigint | NO | PK | タスクID |
 | development_id | bigint | NO | FK | developments.id |
-| name | varchar(255) | NO |  | タスク名 |
+| assigned_user_id | bigint | NO | FK | users.id |
+| title | varchar(255) | NO |  | タスク名 |
 | description | text | YES |  | 詳細 |
-| assignee_user_id | bigint | YES | FK | users.id |
-| current_progress | int | NO |  | 現在の進捗率 (0-100) |
+| priority | varchar(30) | YES |  | 優先度 |
+| due_date | date | YES |  | 期限 |
 | status | varchar(30) | NO |  | 状態 (active, completed) |
 | created_at | datetime | NO |  | 作成日時 |
 | updated_at | datetime | NO |  | 更新日時 |
@@ -67,11 +70,17 @@
 | カラム名 | 型 | NULL | キー | 説明 |
 |---|---|---|---|---|
 | id | bigint | NO | PK | 履歴ID |
-| task_id | bigint | NO | FK | development_tasks.id |
+| development_task_id | bigint | NO | FK | development_tasks.id |
+| target_year | int | NO | IDX | 対象年 |
+| target_month | int | NO | IDX | 対象月 |
 | progress_percent | int | NO |  | 更新時の進捗率 |
-| comment | text | YES |  | 進捗コメント |
-| updated_by | bigint | NO | FK | users.id |
+| progress_comment | text | YES |  | 進捗コメント |
+| delay_reason | text | YES |  | 遅延理由 |
+| next_month_plan | text | YES |  | 次月予定 |
+| submitted_by | bigint | NO | FK | users.id |
+| submitted_at | datetime | YES |  | 提出日時 |
 | created_at | datetime | NO |  | 作成日時 |
+| updated_at | datetime | NO |  | 更新日時 |
 
 ### 3.13 faqs
 問い合わせ内容を蓄積するFAQテーブル。
@@ -80,11 +89,12 @@
 |---|---|---|---|---|
 | id | bigint | NO | PK | FAQ ID |
 | title | varchar(255) | NO |  | 件名 |
-| content | text | YES |  | 内容（回答含む） |
-| assignee_user_id | bigint | YES | FK | 担当者 users.id |
-| status | varchar(30) | NO |  | 状態 (pending, resolved) |
+| question_detail | text | NO |  | 問い合わせ内容 |
+| answer_detail | text | YES |  | 回答内容 |
+| status | varchar(30) | NO |  | 状態 (new, in_progress, completed) |
 | progress_percent | int | NO |  | 進捗率 |
-| created_by | bigint | NO | FK | users.id |
+| assignee_user_id | bigint | YES | FK | 担当者 users.id |
+| created_by | bigint | NO | FK | 作成者 users.id |
 | created_at | datetime | NO |  | 作成日時 |
 | updated_at | datetime | NO |  | 更新日時 |
 
